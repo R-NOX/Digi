@@ -1,0 +1,24 @@
+From 8f500939c8f4a59ffa51c2e9ed82ae9b433eb97e Mon Sep 17 00:00:00 2001
+From: Herman Yulau <Herman.Yulau@promwad.com>
+Date: Thu, 12 Apr 2018 16:28:55 +0300
+Subject: [PATCH] deleted setting class for exported channels
+
+---
+ drivers/pwm/sysfs.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/pwm/sysfs.c b/drivers/pwm/sysfs.c
+index 83f2b0b..a813239 100644
+--- a/drivers/pwm/sysfs.c
++++ b/drivers/pwm/sysfs.c
+@@ -263,7 +263,6 @@ static int pwm_export_child(struct device *parent, struct pwm_device *pwm)
+ 	export->pwm = pwm;
+ 	mutex_init(&export->lock);
+ 
+-	export->child.class = parent->class;
+ 	export->child.release = pwm_export_release;
+ 	export->child.parent = parent;
+ 	export->child.devt = MKDEV(0, 0);
+-- 
+2.7.4
+

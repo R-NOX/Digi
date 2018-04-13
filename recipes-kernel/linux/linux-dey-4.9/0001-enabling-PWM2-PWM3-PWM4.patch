@@ -1,0 +1,68 @@
+From 7814255c4c892516cad17911a11ada407fef2a08 Mon Sep 17 00:00:00 2001
+From: Herman Yulau <Herman.Yulau@promwad.com>
+Date: Wed, 11 Apr 2018 18:12:35 +0300
+Subject: [PATCH] enabling PWM2 PWM3 PWM4
+
+---
+ arch/arm/boot/dts/imx6ul-ccimx6ulstarter-id129.dts | 39 ++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/arch/arm/boot/dts/imx6ul-ccimx6ulstarter-id129.dts b/arch/arm/boot/dts/imx6ul-ccimx6ulstarter-id129.dts
+index d0fd5b8..072cd6d 100644
+--- a/arch/arm/boot/dts/imx6ul-ccimx6ulstarter-id129.dts
++++ b/arch/arm/boot/dts/imx6ul-ccimx6ulstarter-id129.dts
+@@ -82,6 +82,24 @@
+ 	status = "okay";
+ };
+ 
++&pwm2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm2>;
++	status = "okay";
++};
++
++&pwm3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm3>;
++	status = "okay";
++};
++
++&pwm4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm4>;
++	status = "okay";
++};
++
+ /* UART4 (Raspberry PI Expansion header) */
+ &uart4 {
+ 	status = "okay";
+@@ -114,5 +132,26 @@
+ 				MX6UL_PAD_GPIO1_IO04__GPIO1_IO04        0xb0
+ 			>;
+ 		};
++
++		pinctrl_pwm2: pwm2grp {
++			fsl,pins = <
++				/* pin 28 of the RPI expansion header */
++				MX6UL_PAD_LCD_DATA01__PWM2_OUT		0x10b0
++			>;
++		};
++
++		pinctrl_pwm3: pwm3grp {
++			fsl,pins = <
++				/* pin 33 of the RPI expansion header */
++				MX6UL_PAD_LCD_DATA02__PWM3_OUT		0x10b0
++			>;
++		};
++
++		pinctrl_pwm4: pwm4grp {
++			fsl,pins = <
++				/* pin 32 of the RPI expansion header */
++				MX6UL_PAD_LCD_DATA03__PWM4_OUT		0x10b0
++			>;
++		};
+ 	};
+ };
+-- 
+2.7.4
+
