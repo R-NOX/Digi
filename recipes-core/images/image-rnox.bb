@@ -26,6 +26,6 @@ inherit dey-image
 # Do not install udev-cache
 BAD_RECOMMENDATIONS += "udev-cache"
 
-IMAGE_INSTALL += "helloworld install-rnox-scr install-rnox-scr"
+IMAGE_INSTALL += "helloworld librnox install-rnox-scr sqlite"
 
 #require recipes-core/install-rnox-scr/install-rnox-scr_1.0.bb
