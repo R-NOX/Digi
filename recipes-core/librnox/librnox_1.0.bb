@@ -26,21 +26,25 @@ SRC_URI = "\
 	file://queue.c \
 	file://queue.h \
 "
+FILES_SOLIBSDEV = ""
 
-FILES_${PN} = "${libdir}/*.so"
+FILES_${PN} = "${libdir}/*.so*"
+FILES_${PN}-dev = "${includedir}/rnox/*.h"
 
-PACKAGES = "${PN} ${PN}-dev ${PN}-dbg ${PN}-staticdev"
+#PACKAGES = "${PN} ${PN}-dev ${PN}-dbg ${PN}-staticdev"
 
-RDEPENDS_${PN}-staticdev = ""
-RDEPENDS_${PN}-dev = ""
-RDEPENDS_${PN}-dbg = ""
+#RDEPENDS_${PN}-staticdev = ""
+#RDEPENDS_${PN}-dev = ""
+#RDEPENDS_${PN}-dbg = ""
 
 do_compile() {
 	${CC} -c -fpic queue.c log.c
-	${CC} -shared -o ${PN}-${PV}.so log.o queue.o -ljansson 
+	${CC} -shared -o ${PN}.so log.o queue.o -ljansson 
 }
 
 do_install() {
-	 install -d ${D}${libdir}
-	 install -m 0644 ${PN}-${PV}.so ${D}${libdir}
+	install -d ${D}${libdir}
+	install -m 0644 ${PN}.so ${D}${libdir}
+	install -d ${D}${includedir}/rnox/
+	install -m 0755 ${S}/*.h ${D}${includedir}/rnox/
 }
