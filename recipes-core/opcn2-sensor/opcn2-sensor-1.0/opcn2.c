@@ -631,7 +631,7 @@ int print_information_string()
 
 	usleep(3000);
 
-	cmd = 0x00;
+//	cmd = 0x00;
 	for (int i = 0; i < 60; i++) {
 		if (ldx_spi_transfer(spi_dev, &cmd, &vals[i], 1) == EXIT_FAILURE) {
 			fprintf(stderr,"read_information_string 1 cmd error\n");
