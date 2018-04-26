@@ -2,7 +2,7 @@
  * main.c
  *
  *  Created on: Apr 23, 2018
- *      Author: herman
+ *      Author: Herman <Herman.Yulau@promwad.com>
  */
 
 #include <errno.h>
@@ -20,6 +20,9 @@
 
 #include "rnox/queue.h"
 #include "rnox/log.h"
+#include "post.h"
+
+static int queue_handle = -1;          // queue handle
 
 /*
  * usage_and_exit() - Show usage information and exit with 'exitval' return
@@ -51,6 +54,12 @@ static void usage_and_exit(char *name, int exitval)
  */
 static void cleanup(void)
 {
+	if (queue_destroy(queue_handle) == EXIT_FAILURE) {
+		log_print(LOG_MSG_INFO, "Failed to close queue");
+	}
+
+	post_sessionClose();
+
 	log_print(LOG_MSG_INFO, "daemon-data-handler exited successfully");
 }
 
@@ -165,18 +174,36 @@ int main(int argc, char **argv)
 	atexit(cleanup);
 	register_signals();
 
-    int queue_handle = -1;          // queue handle
     if (queue_create(&queue_handle) != EXIT_SUCCESS) {
-    	log_print(LOG_MSG_INFO, "Failed to create messages' queue");
+    	log_print(LOG_MSG_INFO, "Failed to create messages' queue. Exit.");
         return EXIT_FAILURE;
     }
 
+    if (post_sessionOpen() == EXIT_FAILURE) {
+    	log_print(LOG_MSG_INFO, "Failed to open post session. Exit.");
+    	return EXIT_FAILURE;
+    }
+
+    log_print(LOG_MSG_INFO, "daemon-data-handler started successfully");
+
+    bool isConnection = true;
 	while(1) {
-		log_print(LOG_MSG_INFO, "daemon-data-handler started successfully");
 
 	    queue_t msg = { -1, { 0 } };
 	    if (queue_get_msg(queue_handle, &msg)) {
 	    	log_print(LOG_MSG_INFO, "Retrieved data from queue: %s", msg.mtext);
+	    }
+
+	    bool isDataSent = true;
+	    if (post(msg.mtext) == EXIT_FAILURE) {
+	    	log_print(LOG_MSG_INFO, "Failed to send data to server");
+	    	isDataSent = false;
+	    	isConnection = false;
+	    }
+	    else { log_print(LOG_MSG_INFO, "Data was sent to server");}
+
+	    if (isDataSent) {
+
 	    }
 
 		sleep(3);

@@ -8,9 +8,9 @@ SECTION = "app"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-DEPENDS = "librnox"
+DEPENDS = "librnox curl"
 
-RDEPENDS_${PN} = "librnox"
+RDEPENDS_${PN} = "librnox curl"
 
 INSANE_SKIP_${PN} = "ldflags"
 INSANE_SKIP_${PN}-dev = "ldflags"
@@ -19,13 +19,15 @@ S = "${WORKDIR}"
 
 SRC_URI = "\
 	file://main.c \
+	file://post.c \
+	file://post.h \
 "
 
 FILES_${PN} = "${bindir}/*"
 
 do_compile() {
-	${CC} -c main.c
-	${CC} -o ${PN} main.o -lrnox
+	${CC} -c main.c post.c
+	${CC} -o ${PN} main.o post.o -lrnox -lcurl
 }
 
 do_install() {
