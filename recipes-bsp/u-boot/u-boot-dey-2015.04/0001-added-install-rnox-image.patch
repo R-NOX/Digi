@@ -1,0 +1,26 @@
+From 4ba7ecacf2ff4798a1d53d0c7e5e6825fb5289fc Mon Sep 17 00:00:00 2001
+From: Herman Yulau <Herman.Yulau@promwad.com>
+Date: Sat, 28 Apr 2018 09:33:47 +0300
+Subject: [PATCH] added install rnox image
+
+---
+ include/configs/ccimx6ulstarter.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/include/configs/ccimx6ulstarter.h b/include/configs/ccimx6ulstarter.h
+index 6c155a3..8ea56f4 100644
+--- a/include/configs/ccimx6ulstarter.h
++++ b/include/configs/ccimx6ulstarter.h
+@@ -188,6 +188,9 @@
+ 	"install_linux_fw_sd=if load mmc 0 ${loadaddr} install_linux_fw_sd.scr;then " \
+ 			"source ${loadaddr};" \
+ 		"fi;\0" \
++	"install_rnox=if load mmc 0 ${loadaddr} install_rnox_fw_sd.scr;then " \
++			"source ${loadaddr};" \
++		"fi;\0" \
+ 	"linux_file=core-image-base-" CONFIG_SYS_BOARD ".boot.ubifs\0" \
+ 	"loadscript=" \
+ 		"if test -z \"${mtdbootpart}\"; then " \
+-- 
+2.7.4
+
