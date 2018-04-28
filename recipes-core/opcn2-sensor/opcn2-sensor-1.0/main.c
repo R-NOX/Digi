@@ -8,14 +8,14 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "../../librnox/queue.h"
-#include "../../librnox/log.h"
+#include "rnox/queue.h"
+#include "rnox/log.h"
 #include <libdigiapix/spi.h>
 #include "opcn2.h"
 
 #define ARG_SPI_DEVICE		0
 #define ARG_SPI_SLAVE		1
-#define DATA_LENGTH			200
+#define DATA_LENGTH			150
 
 static char *datapost;
 
@@ -199,7 +199,12 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-//	sleep(1);
+	sleep(1);
+
+	if (sensor_on()) {
+				log_print(LOG_MSG_INFO, "OPC-N2 was turned on\n");
+			} else { log_print(LOG_MSG_INFO, "Failed to turn on OPC-N2\n"); }
+
 //	log_print(LOG_MSG_INFO, print_information_string());
 
 //	sleep(1);
@@ -236,19 +241,17 @@ int main(int argc, char *argv[])
 
 	while(1) {
 
-//		if (sensor_on()) {
-//			log_print(LOG_MSG_INFO, "OPC-N2 was turned on\n");
-//		} else { log_print(LOG_MSG_INFO, "Failed to turn on OPC-N2\n"); }
+//		sleep(1);
 
-		sleep(1);
+//		if (sensor_ping()) {
+//			log_print(LOG_MSG_INFO, "OPC-N2 was pinged successfully\n");
+//		} else {
+//			log_print(LOG_MSG_INFO, "Failed to ping OPC-N2 sensor. Restart sensor...");
+//			sensor_off();
+//			sensor_on();
+//		}
 
-		if (sensor_ping()) {
-			log_print(LOG_MSG_INFO, "OPC-N2 was pinged successfully\n");
-		} else {
-			log_print(LOG_MSG_INFO, "Failed to ping OPC-N2 sensor\n");
-		}
-
-		sleep(3);
+		sleep(4);
 
 		HistogramData hist = sensor_read_histogram(true);
 
@@ -265,10 +268,11 @@ int main(int argc, char *argv[])
 		// build post data
 //		asprintf(&datapost, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"PM1\":%f,\"PM2\":%f,\"PM3\":%f,\"SFR\":%f,\"PRESS\":%d}",
 //				 "api-test-device-02", "SPI", "OPC-N2", hist.pm1, hist.pm25, hist.pm10, hist.sfr, hist.temp_pressure);
-		if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"PM1\":%f,\"PM2\":%f,\"PM3\":%f,\"SFR\":%f,\"PRESS\":%d}",
-								"api-test-device-02", "SPI", "OPC-N2", hist.pm1, hist.pm25, hist.pm10, hist.sfr, hist.temp_pressure) < 1) {
+		if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"PM1\":%.2f,\"PM2\":%.2f,\"PM3\":%.2f,\"SFR\":%.2f}",
+								"api-test-device-02", "SPI", "OPC-N2", hist.pm1, hist.pm25, hist.pm10, hist.sfr) < 1) {
 			log_print(LOG_MSG_INFO, "Failed to create formated data");
 		}
+//		log_print(LOG_MSG_INFO, "%s", datapost);
 
 		if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
 			log_print(LOG_MSG_INFO, "Failed to put message in queue");
