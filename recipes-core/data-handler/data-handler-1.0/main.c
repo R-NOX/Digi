@@ -21,8 +21,12 @@
 #include "rnox/queue.h"
 #include "rnox/log.h"
 #include "post.h"
+#include "db.h"
+
+#define DB_FILENAME "/home/root/rnox.db"
 
 static int queue_handle = -1;          // queue handle
+static sqlite3 *database;
 
 /*
  * usage_and_exit() - Show usage information and exit with 'exitval' return
@@ -59,6 +63,8 @@ static void cleanup(void)
 	}
 
 	post_sessionClose();
+
+	sqlite3_close(database);
 
 	log_print(LOG_MSG_INFO, "daemon-data-handler exited successfully");
 }
@@ -116,6 +122,27 @@ static int parse_argument(char *argv)
 	return value;
 }
 
+static int send_and_delete_item_fromDB(void *NotUsed, int argc, char **argv, char **azColName) {
+
+    char *key = NULL;
+    char *json = NULL;
+
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(azColName[i], DB_KEY_FIELD)) key = argv[i];
+        if (!strcmp(azColName[i], DB_JSON_FIELD)) json = argv[i];
+    }
+
+    if ((key != NULL) && (json != NULL)) {
+        if (post(json) == EXIT_SUCCESS) {
+        	if (db_delete_item(&database, key) != SQLITE_OK) {
+        		log_print(LOG_MSG_INFO, "Failed to delete item from database with KEY: %s", key);
+        	}
+        }
+    }
+
+    return SQLITE_OK;
+}
+
 int main(int argc, char **argv)
 {
 	/* Our process ID and Session ID */
@@ -142,14 +169,14 @@ int main(int argc, char **argv)
 	sid = setsid();
 	if (sid < 0) {
 		/* Log the failure */
-		log_print(LOG_MSG_INFO, "Failed to create SID");
+		log_print(LOG_MSG_ERR, "Failed to create SID");
 		exit(EXIT_FAILURE);
 	}
 
 	/* Change the current working directory */
 	if ((chdir("/")) < 0) {
 			/* Log the failure */
-		log_print(LOG_MSG_INFO, "Failed to change working directory");
+		log_print(LOG_MSG_ERR, "Failed to change working directory");
 		exit(EXIT_FAILURE);
 	}
 
@@ -175,35 +202,58 @@ int main(int argc, char **argv)
 	register_signals();
 
     if (queue_create(&queue_handle) != EXIT_SUCCESS) {
-    	log_print(LOG_MSG_INFO, "Failed to create messages' queue. Exit.");
+    	log_print(LOG_MSG_ERR, "Failed to create messages' queue. Exit.");
         return EXIT_FAILURE;
     }
 
+    if (db_open(DB_FILENAME, &database) != SQLITE_OK) {
+    	log_print(LOG_MSG_ERR, "Failed to open database.");
+    }
+
     if (post_sessionOpen() == EXIT_FAILURE) {
-    	log_print(LOG_MSG_INFO, "Failed to open post session. Exit.");
+    	log_print(LOG_MSG_ERR, "Failed to open post session. Exit.");
     	return EXIT_FAILURE;
     }
 
     log_print(LOG_MSG_INFO, "daemon-data-handler started successfully");
 
     bool isConnection = true;
+
+	if(test_connection_to_server() == EXIT_SUCCESS) {
+		db_get_items(&database, send_and_delete_item_fromDB);
+		isConnection = true;
+	}
+
 	while(1) {
+
+		if (isConnection == false) {
+			if(test_connection_to_server() == EXIT_SUCCESS) {
+				db_get_items(&database, send_and_delete_item_fromDB);
+				isConnection = true;
+			}
+			else {
+				log_print(LOG_MSG_ERR, "No connection to server");
+			}
+		}
 
 	    queue_t msg = { -1, { 0 } };
 	    if (queue_get_msg(queue_handle, &msg)) {
 	    	log_print(LOG_MSG_INFO, "Retrieved data from queue: %s", msg.mtext);
-	    }
+	    	if (isConnection) {
+	    		if (post(msg.mtext) == EXIT_FAILURE) {
+					log_print(LOG_MSG_ERR, "Failed to send data to server");
+					isConnection = false;
+				}
+	    		else { log_print(LOG_MSG_INFO, "Data was sent to server");}
+	    	}
 
-	    bool isDataSent = true;
-	    if (post(msg.mtext) == EXIT_FAILURE) {
-	    	log_print(LOG_MSG_INFO, "Failed to send data to server");
-	    	isDataSent = false;
-	    	isConnection = false;
-	    }
-	    else { log_print(LOG_MSG_INFO, "Data was sent to server");}
-
-	    if (isDataSent) {
-
+	    	if (isConnection == false) {
+	    		if (!db_add_item(&database, msg.mtext, NULL)) {
+	    			log_print(LOG_MSG_INFO, "Saved to database");
+	    		}
+	    		else {log_print(LOG_MSG_ERR, "Failed to save to database");}
+	    		continue;
+	    	}
 	    }
 
 		sleep(3);

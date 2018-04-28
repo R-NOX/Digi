@@ -64,8 +64,6 @@ void post_sessionClose(void) {
     post_headers = NULL;
 }
 
-
-
 int post(const char * const data/*, const char * const portname*/) {
     if (post_curl == NULL) return EXIT_FAILURE;
 
@@ -88,4 +86,20 @@ int post(const char * const data/*, const char * const portname*/) {
     return EXIT_SUCCESS;
 }
 
+int test_connection_to_server() {
+	if (post_curl == NULL) return EXIT_FAILURE;
 
+	CURLcode rcode = CURLE_OK;      // curl result code
+
+
+	curl_easy_setopt(post_curl, CURLOPT_URL, POST_URL);
+
+	// fetch page and capture return code
+	// TODO: valgrind: 1 errors 1 contexts
+	if (curl_easy_perform(post_curl) == CURLE_OK) {
+		return EXIT_SUCCESS;
+	}
+	else {
+		return EXIT_FAILURE;
+	}
+}

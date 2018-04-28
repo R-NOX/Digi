@@ -25,5 +25,7 @@ void post_sessionClose(void);
  *      exit code */
 int post(const char * const data/*, const char * const portname*/);
 
+int test_connection_to_server();
+
 
 #endif // POST_H
