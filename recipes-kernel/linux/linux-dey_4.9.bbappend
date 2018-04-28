@@ -5,3 +5,5 @@ SRC_URI += "\
 	file://0001-enabling-PWM2-PWM3-PWM4.patch \
 	file://0002-deleted-setting-class-for-exported-channels.patch \
 "
+
+KERNEL_MODULE_AUTOLOAD += "spidev "
