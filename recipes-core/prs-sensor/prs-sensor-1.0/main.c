@@ -20,13 +20,12 @@
 
 #define DEFAULT_I2C_ALIAS		"DEFAULT_I2C_BUS"
 #define I2C_BUS_NUMBER			1
-#define I2C_SENSOR_ADDRESS		0x28//(0x28 << 1) | 1
+#define I2C_SENSOR_ADDRESS		0x28
 #define DEFAULT_I2C_ADDRESS_SIZE	2
 
 static i2c_t *i2c_bus;
 static unsigned int i2c_address;
-static uint8_t *tx_buf;
-static uint8_t *rx_buf;
+static int queue_handle = -1;          // queue handle
 
 /*
  * usage_and_exit() - Show usage information and exit with 'exitval' return
@@ -61,9 +60,9 @@ static void cleanup(void)
 	/* Free i2c */
 	ldx_i2c_free(i2c_bus);
 
-	/* Free buffers */
-	free(rx_buf);
-	free(tx_buf);
+	if (queue_destroy(queue_handle) == EXIT_FAILURE) {
+		log_print(LOG_MSG_INFO, "Failed to close queue");
+	}
 
 	log_print(LOG_MSG_INFO, "deamon-prs-sensor exited successfully");
 }
@@ -209,21 +208,24 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-    int queue_handle = -1;          // queue handle
     if (queue_create(&queue_handle) != EXIT_SUCCESS) {
     	log_print(LOG_MSG_INFO, "Failed to create messages' queue");
         return EXIT_FAILURE;
     }
 
+    log_print(LOG_MSG_INFO, "daemon-prs-sensor started successfully");
+
 //	printf("Read pressure data...\n");
 
     while (1) {
-    	log_print(LOG_MSG_INFO, "daemon-prs-sensor started successfully");
 
 		uint8_t tx_buffer[] = {1};
 		uint8_t rx_buffer[4] = {};
 
+		/* write command and read measurements */
 		ldx_i2c_transfer(i2c_bus, i2c_address, tx_buffer, 1, rx_buffer, 4);
+
+		/* check data status */
 		uint16_t pressure_counts, temp_counts;
 		if (((rx_buffer[0] >> 7) | (rx_buffer[0] >> 6)) != 1) {
 			pressure_counts =_16bit_int(rx_buffer[0], rx_buffer[1]);
@@ -231,37 +233,37 @@ int main(int argc, char **argv)
 		}
 		else {
 			log_print(LOG_MSG_INFO, "Sensor indicated BAD status");
+			continue;
 //			printf("Sensor indicated BAD status\n");
 		}
 
+		/* This formula was taken from datasheet. Perhaps needs tuning */
 		float pressure = ((pressure_counts - 1638.0) * (1 - 0) / (14745.0 - 1638)) + 0;
 		float temperature = ((temp_counts / 2047.0) * 200) - 50;
-		printf("Sensor status: %d-%d\n"
-				"Pressure: %f\n"
-				"Temperature: %f\n\n", (rx_buffer[0] >> 7), (rx_buffer[0] >> 6), pressure, temperature);
+//		printf("Sensor status: %d-%d\n"
+//				"Pressure: %f\n"
+//				"Temperature: %f\n\n", (rx_buffer[0] >> 7), (rx_buffer[0] >> 6), pressure, temperature);
 
 
 		//"timestamp": "2013-08-31T01:02:33.555"
-		char timestamp [256];
-		{
-			time_t rawtime;
-			struct tm * timeinfo;
-			time ( &rawtime );
-			timeinfo = localtime ( &rawtime );
-			strftime (timestamp,30,"%Y-%m-%dT%H:%M:%S.000",timeinfo);
-		}
+//		char timestamp [256];
+//		{
+//			time_t rawtime;
+//			struct tm * timeinfo;
+//			time ( &rawtime );
+//			timeinfo = localtime ( &rawtime );
+//			strftime (timestamp,30,"%Y-%m-%dT%H:%M:%S.000",timeinfo);
+//		}
 
 		char *datapost = NULL;
 		// build post data
 		asprintf(&datapost, "{"
-				 "\"timestamp\":\"%s\","
 				 "\"device_id\":\"%s\","
 				 "\"sensor_id\":\"%s\","
 				 "\"sensor_type\":\"%s\","
 				 "\"PRESS\":%f,"
 				 "\"TEMP\":%f"
 				 "}",
-				 timestamp,
 				 "api-test-device-01",
 				 "I2C",
 				 "PRS",

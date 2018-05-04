@@ -219,6 +219,7 @@ int main(int argc, char **argv)
 
     bool isConnection = true;
 
+    /* Send data from database if it exists */
 	if(test_connection_to_server() == EXIT_SUCCESS) {
 		db_get_items(&database, send_and_delete_item_fromDB);
 		isConnection = true;
@@ -226,6 +227,7 @@ int main(int argc, char **argv)
 
 	while(1) {
 
+		/* Check connection and send data */
 		if (isConnection == false) {
 			if(test_connection_to_server() == EXIT_SUCCESS) {
 				db_get_items(&database, send_and_delete_item_fromDB);
@@ -236,26 +238,27 @@ int main(int argc, char **argv)
 			}
 		}
 
+		/* Send data or save to database if there is no connection */
 	    queue_t msg = { -1, { 0 } };
 	    if (queue_get_msg(queue_handle, &msg)) {
-	    	log_print(LOG_MSG_INFO, "Retrieved data from queue: %s", msg.mtext);
+//	    	log_print(LOG_MSG_INFO, "Retrieved data from queue: %s", msg.mtext);
 	    	if (isConnection) {
 	    		if (post(msg.mtext) == EXIT_FAILURE) {
 					log_print(LOG_MSG_ERR, "Failed to send data to server");
 					isConnection = false;
 				}
-	    		else { log_print(LOG_MSG_INFO, "Data was sent to server");}
+//	    		else { log_print(LOG_MSG_INFO, "Data was sent to server");}
 	    	}
 
 	    	if (isConnection == false) {
 	    		if (!db_add_item(&database, msg.mtext, NULL)) {
-	    			log_print(LOG_MSG_INFO, "Saved to database");
+//	    			log_print(LOG_MSG_INFO, "Saved to database");
 	    		}
 	    		else {log_print(LOG_MSG_ERR, "Failed to save to database");}
 	    		continue;
 	    	}
 	    }
 
-		sleep(3);
+		sleep(1);
 	}
 }

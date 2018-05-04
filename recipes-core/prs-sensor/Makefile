@@ -9,7 +9,7 @@ CFLAGS += $(shell pkg-config --cflags libdigiapix)
 LDLIBS += $(shell pkg-config --libs libdigiapix)
 
 $(BINARY): $(OBJ)
-	$(CC) -L../librnox $(LDFLAGS) $^ $(LDLIBS) -o $@ -lrnox-1.0
+	$(CC) -L../librnox $(LDFLAGS) $^ $(LDLIBS) -o $@ -lrnox
 
 $(OBJ): $(SOURCES)
 	$(CC) -I../librnox -g -c $(SOURCES)

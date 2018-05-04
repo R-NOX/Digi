@@ -18,6 +18,7 @@
 #define DATA_LENGTH			150
 
 static char *datapost;
+static int queue_handle = -1;          // queue handle
 
 /*
  * usage_and_exit() - Show usage information and exit with 'exitval' return
@@ -65,6 +66,10 @@ static void cleanup(void)
 		log_print(LOG_MSG_INFO, "OPC-N2 was turned off successfully\n");
 	} else {
 		log_print(LOG_MSG_INFO, "Failed to turn off OPC-N2");
+	}
+
+	if (queue_destroy(queue_handle) == EXIT_FAILURE) {
+		log_print(LOG_MSG_INFO, "Failed to close queue");
 	}
 
 	free(datapost);
@@ -201,9 +206,7 @@ int main(int argc, char *argv[])
 
 	sleep(1);
 
-	if (sensor_on()) {
-				log_print(LOG_MSG_INFO, "OPC-N2 was turned on\n");
-			} else { log_print(LOG_MSG_INFO, "Failed to turn on OPC-N2\n"); }
+	sensor_on();
 
 //	log_print(LOG_MSG_INFO, print_information_string());
 
@@ -229,7 +232,6 @@ int main(int argc, char *argv[])
 //			   sensor_status->fanDAC, sensor_status->laserDAC);
 //	}
 
-    int queue_handle = -1;          // queue handle
     if (queue_create(&queue_handle) != EXIT_SUCCESS) {
     	log_print(LOG_MSG_INFO, "Failed to create messages' queue");
         return EXIT_FAILURE;
