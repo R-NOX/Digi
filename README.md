@@ -51,7 +51,8 @@
   ...
   /your/path/dey-2.4/sources/meta-digi/meta-digi-arm \
   /your/path/dey-2.4/sources/meta-digi/meta-digi-dey \
-  **/your/path/dey-2.4/sources/meta-rnox** \
+# !!!
+  /your/path/dey-2.4/sources/meta-rnox \
   "
 ```
 
