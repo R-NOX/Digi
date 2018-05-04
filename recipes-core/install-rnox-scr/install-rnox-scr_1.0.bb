@@ -30,7 +30,7 @@ FILES_SOLIBSDEV = ""
 
 do_deploy() {
 	# R-NOX firmware install script
-	mkimage -T script -n "R-NOX firmware install script" -C none -d ${WORKDIR}/install-rnox-scr_1.0.txt ${DEPLOYDIR}/install_rnox_sd.scr
+	mkimage -T script -n "R-NOX firmware install script" -C none -d ${WORKDIR}/install-rnox-scr_1.0.txt ${DEPLOYDIR}/install_rnox_fw_sd.scr.scr
 }
 
 #do_install() {
