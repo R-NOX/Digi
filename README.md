@@ -4,9 +4,10 @@
 
 1. Установка **Digi Embedded Yocto** осуществляется в соответствии со следующей инструкцией - [Install Digi Embedded Yocto](https://www.digi.com/resources/documentation/digidocs/90002286/#task/eclipse_ide/new/install_digi_embedded_yocto.htm%3FTocPath%3DDigi%2520Embedded%2520Yocto%7CSystem%2520development%7C_____2).
 
-* Устанавливается **repo** tool
+* Устанавливаются необходимые пакеты и **repo** tool 
 
 ```
+    sudo apt-get install gawk wget git-core diffstat unzip texinfo gcc-multilib g++-multilib build-essential chrpath socat libsdl1.2-dev xterm minicom
     sudo curl -o /usr/local/bin/repo http://commondatastorage.googleapis.com/git-repo-downloads/repo
     sudo chmod a+x /usr/local/bin/repo
 ```
