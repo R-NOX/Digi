@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 DEPENDS += "dtc-native u-boot-mkimage-native"
 #DEPENDS += "${@base_conditional('TRUSTFENCE_SIGN', '1', 'trustfence-sign-tools-native', '', d)}"
 
-PROVIDES += "u-boot"
+#PROVIDES += "u-boot"
 
 #SRCBRANCH = "v2015.04/maint"
 #SRCREV = "5ea79bed5143fc47e5b11af2d44a04bab9af4092"
