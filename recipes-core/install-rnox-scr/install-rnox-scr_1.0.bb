@@ -4,7 +4,7 @@ SECTION = "boot"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-DEPENDS += "dtc-native u-boot-mkimage-native u-boot-mkimage"
+DEPENDS += "dtc-native u-boot-mkimage-native"
 #DEPENDS += "${@base_conditional('TRUSTFENCE_SIGN', '1', 'trustfence-sign-tools-native', '', d)}"
 
 #PROVIDES += "u-boot"
@@ -13,7 +13,7 @@ DEPENDS += "dtc-native u-boot-mkimage-native u-boot-mkimage"
 #SRCREV = "5ea79bed5143fc47e5b11af2d44a04bab9af4092"
 
 inherit deploy
-addtask deploy after compile
+#addtask deploy after compile
 
 #inherit autotools
 
