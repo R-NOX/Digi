@@ -7,16 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
 #define _GNU_SOURCE
 #include <stdio.h>
 int asprintf(char **strp, const char *fmt, ...);
 
-
-
-
-int db_exec(sqlite3 **ppDb, char *sql, int (* callback)(void *, int, char **, char **)) {
+int db_exec(sqlite3 **ppDb, char *sql, int (* callback)(void *, int, char **, char **))
+{
     if (*ppDb == NULL) return SQLITE_ERROR;
 
     int return_code = SQLITE_OK;
@@ -38,8 +34,8 @@ int db_exec(sqlite3 **ppDb, char *sql, int (* callback)(void *, int, char **, ch
     return return_code;
 }
 
-
-int db_open(const char *filename, sqlite3 **ppDb) {
+int db_open(const char *filename, sqlite3 **ppDb)
+{
     int return_code = SQLITE_OK;
     char *sql = "CREATE TABLE IF NOT EXISTS "
                 "sensors(" DB_KEY_FIELD " INTEGER PRIMARY KEY,"
@@ -59,7 +55,9 @@ int db_open(const char *filename, sqlite3 **ppDb) {
 
     return return_code;
 }
-int db_add_item(sqlite3 **ppDb, char *json, char *key) {
+
+int db_add_item(sqlite3 **ppDb, char *json, char *key)
+{
     if (*ppDb == NULL) return SQLITE_ERROR;
 
     char *sql = NULL;
@@ -81,7 +79,8 @@ int db_add_item(sqlite3 **ppDb, char *json, char *key) {
     return return_code;
 }
 
-int db_delete_item(sqlite3 **ppDb, char * key) {
+int db_delete_item(sqlite3 **ppDb, char * key)
+{
     if (*ppDb == NULL) return SQLITE_ERROR;
 
     char *sql = NULL;
@@ -96,7 +95,8 @@ int db_delete_item(sqlite3 **ppDb, char * key) {
     return return_code;
 }
 
-int db_item_sended(sqlite3 **ppDb, char * key) {
+int db_item_sended(sqlite3 **ppDb, char * key)
+{
     if (*ppDb == NULL) return SQLITE_ERROR;
 
     char *sql = NULL;
@@ -110,7 +110,8 @@ int db_item_sended(sqlite3 **ppDb, char * key) {
     return return_code;
 }
 
-int db_cleanup(sqlite3 **ppDb) {
+int db_cleanup(sqlite3 **ppDb)
+{
     if (*ppDb == NULL) return SQLITE_ERROR;
 
     char *sql = NULL;
@@ -124,7 +125,8 @@ int db_cleanup(sqlite3 **ppDb) {
     return return_code;
 }
 
-int db_get_items(sqlite3 **ppDb, int (* callback)(void *, int, char **, char **)) {
+int db_get_items(sqlite3 **ppDb, int (* callback)(void *, int, char **, char **))
+{
     if (*ppDb == NULL) return SQLITE_ERROR;
 
     char *sql = NULL;

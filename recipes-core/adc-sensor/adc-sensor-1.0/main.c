@@ -138,13 +138,17 @@ static int adc_sampling_cb(int sample, void *arg)
 
 	consumption = (2 * pow(10, -7) * pow(sample, 3)) - (0.0007 * pow(sample, 2)) + (1.0915 * sample) - 453.09;
 
-	snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"CNSMPT\":%d}",
-									"api-test-device-03", "ADC", "D6F", consumption);
+	/* old */
+	snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"SFR_gas\":%d}",
+									"AirNode_0001", "D6F", "SFR", consumption);
+
+	// snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\":%d}",
+	// 								"AirNode_0001", "D6F", "SFR_gas", consumption);
 
 //	log_print(LOG_MSG_INFO, "%d", sample);
 //	log_print(LOG_MSG_INFO, "%s", datapost);
 	if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
-		log_print(LOG_MSG_INFO, "Failed to put message in queue");
+		log_print(LOG_MSG_INFO, "Failed to put message in queue [SFR_gas]");
 	}
 
 	return EXIT_SUCCESS;

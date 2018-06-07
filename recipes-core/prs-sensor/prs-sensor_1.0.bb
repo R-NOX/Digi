@@ -22,9 +22,17 @@ S = "${WORKDIR}"
 
 SRC_URI = "\
 	file://main.c \
+	file://prs-sensor.sh \
 "
 
-FILES_${PN} = "${bindir}/*"
+inherit update-rc.d
+
+INITSCRIPT_NAME = "prs-sensor.sh"
+INITSCRIPT_PARAMS = "start 62 5 3 2 . stop 70 0 1 6 ."
+
+FILES_${PN} = "${bindir}/* \
+			   ${sysconfdir} \
+"
 
 #PACKAGES = "${PN} ${PN}-dev ${PN}-dbg ${PN}-staticdev"
 
@@ -40,4 +48,9 @@ do_compile() {
 do_install() {
 	 install -d ${D}${bindir}
 	 install -m 0755 ${PN} ${D}${bindir}
+
+ 	 install -d ${D}${sysconfdir} \
+	 			${D}${sysconfdir}/init.d
+
+	 install -m 0755 ${WORKDIR}/prs-sensor.sh ${D}${sysconfdir}/init.d
 }

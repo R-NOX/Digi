@@ -88,8 +88,15 @@ int sensor_init(int spi_device, int spi_slave) {
 	return EXIT_SUCCESS;
 }
 
-int sensor_release(){
+int sensor_release()
+{
 	DBG("call");
+
+  if (ldx_spi_free(spi_dev) == EXIT_FAILURE) {
+    printf("Failed to release SPI");
+    return -1;
+  }
+
 	return 0;
 }
 
@@ -239,10 +246,6 @@ bool sensor_off()
   //vals[1] = //---SPI.transfer(0x01);
   //---digitalWrite(_CS, HIGH);
 
-  	if (ldx_spi_free(spi_dev) == EXIT_FAILURE) {
-  		printf("Failed to release SPI");
-  	}
-
   	return _compare_arrays(vals, expected, 2);
 }
 
@@ -258,11 +261,6 @@ int sensor_read_status(Status *data)
 	uint8_t vals[4];
 	uint8_t cmd = 0x13;
 	int i;
-
-	// Read the status
-	//---digitalWrite(_CS, LOW);
-	//---SPI.transfer(0x13);
-	//---digitalWrite(_CS, HIGH);
 
 	if (ldx_spi_transfer(spi_dev, &cmd, &vals[0], 1) == EXIT_FAILURE) {
 		fprintf(stderr, "sensor_read_status 1st cmd error\n");
@@ -625,13 +623,15 @@ int print_information_string()
 {
 	uint8_t vals[60];
 	uint8_t cmd = 0x3F;
+
 	if (ldx_spi_write(spi_dev, &cmd, 1) == EXIT_FAILURE){
 		fprintf(stderr,"read_information_string 1 cmd error\n");
 	}
 
 	usleep(3000);
 
-//	cmd = 0x00;
+	cmd = 0x00;
+  
 	for (int i = 0; i < 60; i++) {
 		if (ldx_spi_transfer(spi_dev, &cmd, &vals[i], 1) == EXIT_FAILURE) {
 			fprintf(stderr,"read_information_string 1 cmd error\n");
@@ -772,4 +772,52 @@ HistogramData sensor_read_histogram(bool convert_to_conc)
 	return data;
 }
 
+void print_histogram_data(const HistogramData *hist)
+{
+	if(hist == NULL) {
+		return;
+	}
 
+	printf("struct HistogramData\n");
+
+	printf("bin0: %f\n", hist->bin0);
+	printf("bin1: %f\n", hist->bin1);
+	printf("bin2: %f\n", hist->bin2);
+	printf("bin3: %f\n", hist->bin3);
+	printf("bin4: %f\n", hist->bin4);
+	printf("bin5: %f\n", hist->bin5);
+	printf("bin6: %f\n", hist->bin6);
+	printf("bin7: %f\n", hist->bin7);
+	printf("bin8: %f\n", hist->bin8);
+	printf("bin9: %f\n", hist->bin9);
+	printf("bin10: %f\n", hist->bin10);
+	printf("bin11: %f\n", hist->bin11);
+	printf("bin12: %f\n", hist->bin12);
+	printf("bin13: %f\n", hist->bin13);
+	printf("bin14: %f\n", hist->bin14);
+	printf("bin15: %f\n", hist->bin15);
+
+	// Mass Time-of-Flight
+	printf("bin1MToF: %f\n", hist->bin1MToF);
+	printf("bin3MToF: %f\n", hist->bin3MToF);
+	printf("bin5MToF: %f\n", hist->bin5MToF);
+	printf("bin7MToF: %f\n", hist->bin7MToF);
+
+	// Sample Flow Rate
+	printf("sfr: %f\n", hist->sfr);
+
+	// Either the Temperature or Pressure
+	printf("temp_pressure: %lu\n", hist->temp_pressure);
+
+	// Sampling Period
+	printf("period: %f\n", hist->period);
+
+	// Checksum
+	printf("checksum: %d\n", hist->checksum);
+
+	printf("pm1: %f\n", hist->pm1);
+	printf("pm25: %f\n", hist->pm25);
+	printf("pm10: %f\n", hist->pm10);
+	
+	printf("\n");
+}

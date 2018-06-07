@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#define QUEUE_MAX_BUFFER_SIZE   4079
+#define QUEUE_MAX_BUFFER_SIZE   8192
 
 typedef struct msgbuf {
     long    mtype;

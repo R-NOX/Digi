@@ -17,7 +17,7 @@
 #define ARG_SPI_SLAVE		1
 #define DATA_LENGTH			150
 
-static char *datapost;
+static char *datapost = NULL;
 static int queue_handle = -1;          // queue handle
 
 /*
@@ -67,6 +67,8 @@ static void cleanup(void)
 	} else {
 		log_print(LOG_MSG_INFO, "Failed to turn off OPC-N2");
 	}
+
+	sensor_release();
 
 	if (queue_destroy(queue_handle) == EXIT_FAILURE) {
 		log_print(LOG_MSG_INFO, "Failed to close queue");
@@ -204,9 +206,11 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* reset sensor */
+	sensor_off();
 	sleep(1);
-
 	sensor_on();
+	sleep(1);
 
 //	log_print(LOG_MSG_INFO, print_information_string());
 
@@ -241,6 +245,8 @@ int main(int argc, char *argv[])
 
 	log_print(LOG_MSG_INFO, "daemon-opcn2-sensor started successfully");
 
+	// print_information_string();
+
 	while(1) {
 
 //		sleep(1);
@@ -253,9 +259,11 @@ int main(int argc, char *argv[])
 //			sensor_on();
 //		}
 
-		sleep(4);
+		sleep(5);
 
 		HistogramData hist = sensor_read_histogram(true);
+
+		// print_histogram_data(&hist);
 
 		//"timestamp": "2013-08-31T01:02:33.555"
 //		char timestamp [256];
@@ -270,8 +278,9 @@ int main(int argc, char *argv[])
 		// build post data
 //		asprintf(&datapost, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"PM1\":%f,\"PM2\":%f,\"PM3\":%f,\"SFR\":%f,\"PRESS\":%d}",
 //				 "api-test-device-02", "SPI", "OPC-N2", hist.pm1, hist.pm25, hist.pm10, hist.sfr, hist.temp_pressure);
-		if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"PM1\":%.2f,\"PM2\":%.2f,\"PM3\":%.2f,\"SFR\":%.2f}",
-								"api-test-device-02", "SPI", "OPC-N2", hist.pm1, hist.pm25, hist.pm10, hist.sfr) < 1) {
+
+		if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"PM1\":%.2f,\"PM2\":%.2f,\"PM3\":%.2f,\"SFR_PM\":%.2f}",
+								"AirNode_0001", "OPC-N2", "PM", hist.pm1, hist.pm25, hist.pm10, hist.sfr) < 1) {
 			log_print(LOG_MSG_INFO, "Failed to create formated data");
 		}
 //		log_print(LOG_MSG_INFO, "%s", datapost);
@@ -279,6 +288,47 @@ int main(int argc, char *argv[])
 		if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
 			log_print(LOG_MSG_INFO, "Failed to put message in queue");
 		}
+
+
+		// /* PM1 */
+		// if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\":%.2f}",
+		// 						"AirNode_0001", "OPC-N2", "PM1", hist.pm1) < 1) {
+		// 	log_print(LOG_MSG_INFO, "Failed to create formated data [PM1]");
+		// }
+
+		// if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
+		// 	log_print(LOG_MSG_INFO, "Failed to put message in queue [PM1]");
+		// }
+
+		// /* PM2.5 */
+		// if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\":%.2f}",
+		// 						"AirNode_0001", "OPC-N2", "PM2.5", hist.pm25) < 1) {
+		// 	log_print(LOG_MSG_INFO, "Failed to create formated data [PM2.5]");
+		// }
+
+		// if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
+		// 	log_print(LOG_MSG_INFO, "Failed to put message in queue [PM2.5]");
+		// }
+
+		// /* PM3 */
+		// if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\":%.2f}",
+		// 						"AirNode_0001", "OPC-N2", "PM10", hist.pm10) < 1) {
+		// 	log_print(LOG_MSG_INFO, "Failed to create formated data [PM10]");
+		// }
+
+		// if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
+		// 	log_print(LOG_MSG_INFO, "Failed to put message in queue [PM10]");
+		// }
+
+		// /* SFR */
+		// if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\":%.2f}",
+		// 						"AirNode_0001", "OPC-N2", "SFR_PM", hist.sfr) < 1) {
+		// 	log_print(LOG_MSG_INFO, "Failed to create formated data [SFR_PM]");
+		// }
+
+		// if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
+		// 	log_print(LOG_MSG_INFO, "Failed to put message in queue [SFR_PM]");
+		// }
 
 //		printf("OPC-N2 data: PM1 - %E, PM2.5 - %E, PM10 - %E, TEMP_PRESSURE: %lu, period - %f, sfr - %f.\n",
 //				hist.pm1, hist.pm25, hist.pm10, hist.temp_pressure, hist.period, hist.sfr);

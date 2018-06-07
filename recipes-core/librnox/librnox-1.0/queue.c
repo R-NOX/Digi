@@ -10,20 +10,22 @@
 #include <string.h>
 #include <stdio.h>
 
-#define QUEUE_FILENAME      "/root"
+#define QUEUE_FILENAME      "/queue_sensors"
 #define QUEUE_INT_VALUE     28832
-#define QUEUE_KEY ftok(QUEUE_FILENAME, QUEUE_INT_VALUE)
 
+static key_t key = -1;
 
-key_t queue_get_key() {
-    static key_t key = -1;
-    if (key == -1) key = ftok(QUEUE_FILENAME, QUEUE_INT_VALUE);
+key_t queue_get_key(void)
+{
+    if (key == -1) {
+        key = ftok(QUEUE_FILENAME, QUEUE_INT_VALUE);
+    }
 
     return key;
 }
 
-
-int queue_create(int* handle) {
+int queue_create(int* handle)
+{
     int msgflg = IPC_CREAT | 0666;
 
 //    if (((*handle = msgget(queue_get_key(), 0666)) > 0)
@@ -40,7 +42,9 @@ int queue_create(int* handle) {
     log_print(LOG_MSG_DEBUG, "channel created");
     return EXIT_SUCCESS;
 }
-int queue_open(int* handle) {
+
+int queue_open(int* handle)
+{
     int msgflg = IPC_CREAT | 0666;
 
     *handle = msgget(queue_get_key(), msgflg);
@@ -54,7 +58,8 @@ int queue_open(int* handle) {
     return EXIT_SUCCESS;
 }
 
-int queue_destroy(int handle) {
+int queue_destroy(int handle)
+{
     if (msgctl(handle, IPC_RMID, NULL) < 0) {
         log_print(LOG_MSG_ERR, "msgctl failed with %s", strerror(errno));
         return EXIT_FAILURE;
@@ -64,8 +69,8 @@ int queue_destroy(int handle) {
     return EXIT_SUCCESS;
 }
 
-
-int queue_get_msg(int handle, queue_t *queue_msg) {
+int queue_get_msg(int handle, queue_t *queue_msg)
+{
     int size = -1;
 
 //    if (((size = msgrcv(handle, queue_msg, QUEUE_MAX_BUFFER_SIZE, 0, 0)) < 0) && (errno != EINTR)) {
@@ -79,7 +84,8 @@ int queue_get_msg(int handle, queue_t *queue_msg) {
     return size;
 }
 
-int queue_put_msg(/*int handle, */const char *msg, const char * const portname) {
+int queue_put_msg(/*int handle, */const char *msg, const char * const portname)
+{
     int handle;
 
     queue_t queue_msg;
@@ -93,7 +99,9 @@ int queue_put_msg(/*int handle, */const char *msg, const char * const portname) 
 
     if (msgsnd(handle, &queue_msg, strlen(msg), IPC_NOWAIT) < 0) {
         log_print(LOG_MSG_WARNING, "failed with %s", strerror(errno));
-        if (errno == EAGAIN) system("reboot");
+
+        // if (errno == EAGAIN) system("reboot");
+        
         return EXIT_FAILURE;
     }
 

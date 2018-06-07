@@ -23,8 +23,11 @@
 #define I2C_SENSOR_ADDRESS		0x28
 #define DEFAULT_I2C_ADDRESS_SIZE	2
 
+#define DATA_LENGTH			150
+
 static i2c_t *i2c_bus;
 static unsigned int i2c_address;
+static char *datapost = NULL;
 static int queue_handle = -1;          // queue handle
 
 /*
@@ -128,6 +131,8 @@ uint16_t _16bit_int(char MSB, char LSB)
 
 int main(int argc, char **argv)
 {
+	uint8_t tx_buffer[] = {1};
+	uint8_t rx_buffer[4] = {0};
 	/* Our process ID and Session ID */
 	pid_t pid, sid;
 
@@ -218,10 +223,6 @@ int main(int argc, char **argv)
 //	printf("Read pressure data...\n");
 
     while (1) {
-
-		uint8_t tx_buffer[] = {1};
-		uint8_t rx_buffer[4] = {};
-
 		/* write command and read measurements */
 		ldx_i2c_transfer(i2c_bus, i2c_address, tx_buffer, 1, rx_buffer, 4);
 
@@ -240,9 +241,10 @@ int main(int argc, char **argv)
 		/* This formula was taken from datasheet. Perhaps needs tuning */
 		float pressure = ((pressure_counts - 1638.0) * (1 - 0) / (14745.0 - 1638)) + 0;
 		float temperature = ((temp_counts / 2047.0) * 200) - 50;
-//		printf("Sensor status: %d-%d\n"
-//				"Pressure: %f\n"
-//				"Temperature: %f\n\n", (rx_buffer[0] >> 7), (rx_buffer[0] >> 6), pressure, temperature);
+
+		printf("Sensor status: %d-%d\n"
+				"Pressure: %f\n"
+				"Temperature: %f\n\n", (rx_buffer[0] >> 7), (rx_buffer[0] >> 6), pressure, temperature);
 
 
 		//"timestamp": "2013-08-31T01:02:33.555"
@@ -255,24 +257,39 @@ int main(int argc, char **argv)
 //			strftime (timestamp,30,"%Y-%m-%dT%H:%M:%S.000",timeinfo);
 //		}
 
-		char *datapost = NULL;
-		// build post data
-		asprintf(&datapost, "{"
-				 "\"device_id\":\"%s\","
-				 "\"sensor_id\":\"%s\","
-				 "\"sensor_type\":\"%s\","
-				 "\"PRESS\":%f,"
-				 "\"TEMP\":%f"
-				 "}",
-				 "api-test-device-01",
-				 "I2C",
-				 "PRS",
-				 pressure,
-				 temperature);
+		datapost = (char*) malloc(DATA_LENGTH);
 
-		queue_put_msg(datapost, NULL);
+		/* old */
+		if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\",\"PRESS_exh\":%.d,\"TEMP_exh\":%.2f}",
+								"AirNode_0001", "HW001BA", "HW", (uint32_t)(pressure * 100000.0), temperature) < 1) {
+			log_print(LOG_MSG_INFO, "Failed to create formated data");
+		}
+		
+		if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
+			log_print(LOG_MSG_INFO, "Failed to put message in queue");
+		}
 
-		sleep(3);
+		// /* PRESS_exh */
+		// if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\":%.d}",
+		// 						"AirNode_0001", "HW001BA", "PRESS_exh", (uint32_t)(pressure * 100000.0)) < 1) {
+		// 	log_print(LOG_MSG_INFO, "Failed to create formated data [PRESS_exh]");
+		// }
+		
+		// if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
+		// 	log_print(LOG_MSG_INFO, "Failed to put message in queue [PRESS_exh]");
+		// }
+
+		// /* TEMP_exh */
+		// if (snprintf(datapost, DATA_LENGTH, "{\"device_id\":\"%s\",\"sensor_id\":\"%s\",\"sensor_type\":\"%s\":%.2f}",
+		// 						"AirNode_0001", "HW001BA", "TEMP_exh", temperature) < 1) {
+		// 	log_print(LOG_MSG_INFO, "Failed to create formated data [TEMP_exh]");
+		// }
+		
+		// if (queue_put_msg(datapost, NULL) == EXIT_FAILURE) {
+		// 	log_print(LOG_MSG_INFO, "Failed to put message in queue [TEMP_exh]");
+		// }
+
+		sleep(1);
 	}
 
 	return EXIT_SUCCESS;

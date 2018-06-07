@@ -30,7 +30,8 @@ static bool flagStderr = true;
 
 void log_slot(const char* key, const json_t *value, const char *filename);
 
-void log_open(int __option, int __facility, bool __isProgram)    {
+void log_open(int __option, int __facility, bool __isProgram)
+{
     // initialize an array of priority names
     log_priority_names[LOG_EMERG] = "emergency";
     log_priority_names[LOG_ALERT] = "alert";
@@ -57,7 +58,9 @@ void log_open(int __option, int __facility, bool __isProgram)    {
 //    { struct config_event_t event =  { (const char *)LOG_LOWER_PRIORITY_DAEMON_VAR, log_slot, JSON_STRING }; config_setEvent(event); }
 //    { struct config_event_t event =  { (const char *)LOG_LOWER_PRIORITY_PROGRAM_VAR, log_slot, JSON_STRING }; config_setEvent(event); }
 }
-void log_slot(const char* key, const json_t *value, const char* filename) {
+
+void log_slot(const char* key, const json_t *value, const char* filename)
+{
     // log lower daemon priority
     if (!isProgram && !strcmp(key, LOG_LOWER_PRIORITY_DAEMON_VAR)) {
         if (value == NULL) {
@@ -129,7 +132,8 @@ void log_slot(const char* key, const json_t *value, const char* filename) {
 
 }
 
-void log_print(const char *filename, const char *functionname, int linenumber, int __pri, const char *__fmt, ...) {
+void log_print(const char *filename, const char *functionname, int linenumber, int __pri, const char *__fmt, ...)
+{
     _UNUSED(filename);
     _UNUSED(functionname);
     _UNUSED(linenumber);
@@ -263,7 +267,8 @@ void log_print(const char *filename, const char *functionname, int linenumber, i
     return;
 }
 
-void log_hex_dump(const void *src, char *buffer, size_t length, size_t line_size, char *prefix) {
+void log_hex_dump(const void *src, char *buffer, size_t length, size_t line_size, char *prefix)
+{
     int i = 0;
     const unsigned char *address = src;
     const unsigned char *line = address;
@@ -287,4 +292,3 @@ void log_hex_dump(const void *src, char *buffer, size_t length, size_t line_size
         }
     }
 }
-

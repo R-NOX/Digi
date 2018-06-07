@@ -181,5 +181,6 @@ ConfigVars sensor_read_configuration_variables();
 ConfigVars2 sensor_read_configuration_variables2();
 PMData sensor_read_pm_data();
 HistogramData sensor_read_histogram(bool convert_to_conc);
+void print_histogram_data(const HistogramData *hist);
 
 #endif /* OPCN2_H_ */

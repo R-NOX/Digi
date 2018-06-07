@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
+#include <string.h>
 
 #include "rnox/queue.h"
 #include "rnox/log.h"
@@ -24,6 +25,19 @@
 #include "db.h"
 
 #define DB_FILENAME "/home/root/rnox.db"
+
+#define FALAG_IDLE  0
+#define FALAG_SET   1
+#define FALAG_UNSET 2
+
+typedef struct {
+	uint8_t connect : 2;
+	uint8_t disconnect : 2;
+	uint8_t data_sending : 2;
+	uint8_t data_send_error : 2;
+	uint8_t save_to_db : 2;
+	uint8_t save_to_db_error : 2;
+} log_state;
 
 static int queue_handle = -1;          // queue handle
 static sqlite3 *database;
@@ -38,16 +52,7 @@ static sqlite3 *database;
 static void usage_and_exit(char *name, int exitval)
 {
 	fprintf(stdout,
-		"Example application using libdigiapix I2C support\n"
-		"\n"
-		"Usage: %s <i2c-bus> <i2c-address> <address-size> <page-size> <page-index>\n\n"
-		"<i2c-bus>       I2C bus index to use or alias\n"
-		"<i2c-address>   Address of the I2C EEPROM memory\n"
-		"<address-size>  Number of EEPROM memory address bytes\n"
-		"<page-size>     EEPROM memory page size in bytes\n"
-		"<page-index>    EEPROM memory page index to use\n"
-		"\n"
-		"Aliases for I2C can be configured in the library config file\n"
+		"Usage: %s \n\n"
 		"\n", name);
 
 	exit(exitval);
@@ -122,7 +127,8 @@ static int parse_argument(char *argv)
 	return value;
 }
 
-static int send_and_delete_item_fromDB(void *NotUsed, int argc, char **argv, char **azColName) {
+static int send_and_delete_item_fromDB(void *NotUsed, int argc, char **argv, char **azColName)
+{
 
     char *key = NULL;
     char *json = NULL;
@@ -145,6 +151,7 @@ static int send_and_delete_item_fromDB(void *NotUsed, int argc, char **argv, cha
 
 int main(int argc, char **argv)
 {
+	log_state log_state = {0}; // FALAGs_IDLE
 	/* Our process ID and Session ID */
 	pid_t pid, sid;
 
@@ -217,7 +224,7 @@ int main(int argc, char **argv)
 
     log_print(LOG_MSG_INFO, "daemon-data-handler started successfully");
 
-    bool isConnection = true;
+    bool isConnection = false;
 
     /* Send data from database if it exists */
 	if(test_connection_to_server() == EXIT_SUCCESS) {
@@ -225,40 +232,76 @@ int main(int argc, char **argv)
 		isConnection = true;
 	}
 
-	while(1) {
+	usleep(500);
 
+	while(1) {
 		/* Check connection and send data */
 		if (isConnection == false) {
 			if(test_connection_to_server() == EXIT_SUCCESS) {
 				db_get_items(&database, send_and_delete_item_fromDB);
-				isConnection = true;
+				if (log_state.connect != FALAG_SET) {
+					log_print(LOG_MSG_INFO, "Connect to server");
+					log_state.connect = FALAG_SET;
+					log_state.disconnect = FALAG_UNSET;
+					isConnection = true;
+				}
 			}
 			else {
-				log_print(LOG_MSG_ERR, "No connection to server");
+				if (log_state.disconnect != FALAG_SET) {
+					log_print(LOG_MSG_ERR, "No connection to server");
+					log_state.connect = FALAG_UNSET;
+					log_state.disconnect = FALAG_SET;
+				}
 			}
 		}
 
 		/* Send data or save to database if there is no connection */
 	    queue_t msg = { -1, { 0 } };
-	    if (queue_get_msg(queue_handle, &msg)) {
+
+	    if (queue_get_msg(queue_handle, &msg) > 0) {
 //	    	log_print(LOG_MSG_INFO, "Retrieved data from queue: %s", msg.mtext);
-	    	if (isConnection) {
-	    		if (post(msg.mtext) == EXIT_FAILURE) {
-					log_print(LOG_MSG_ERR, "Failed to send data to server");
+			if (isConnection) {
+				if (post(msg.mtext) == EXIT_FAILURE) {
+	    			if (log_state.data_send_error != FALAG_SET) {
+						log_print(LOG_MSG_ERR, "Failed to send data to server");
+						log_state.data_sending = FALAG_UNSET;
+						log_state.data_send_error = FALAG_SET;
+						log_state.connect = FALAG_UNSET;
+						log_state.disconnect = FALAG_SET;
+					}
+
 					isConnection = false;
 				}
-//	    		else { log_print(LOG_MSG_INFO, "Data was sent to server");}
+				else {
+	    			if (log_state.data_sending != FALAG_SET) {
+	    				log_print(LOG_MSG_INFO, "Send data to server");
+						log_state.data_sending = FALAG_SET;
+						log_state.data_send_error = FALAG_UNSET;
+	    				log_state.save_to_db = FALAG_UNSET;
+	    				log_state.save_to_db_error = FALAG_SET;
+	    			}
+	    		}
 	    	}
 
 	    	if (isConnection == false) {
 	    		if (!db_add_item(&database, msg.mtext, NULL)) {
-//	    			log_print(LOG_MSG_INFO, "Saved to database");
+	    			if (log_state.save_to_db != FALAG_SET) {
+	    				log_print(LOG_MSG_INFO, "Saved to database");
+	    				log_state.save_to_db = FALAG_SET;
+	    				log_state.save_to_db_error = FALAG_UNSET;
+	    			}
 	    		}
-	    		else {log_print(LOG_MSG_ERR, "Failed to save to database");}
+	    		else {
+	    			if (log_state.save_to_db_error != FALAG_SET) {
+    					log_print(LOG_MSG_ERR, "Failed to save to database");
+	    				log_state.save_to_db = FALAG_UNSET;
+	    				log_state.save_to_db_error = FALAG_SET;
+    				}
+	    		}
 	    		continue;
 	    	}
 	    }
 
-		sleep(1);
+		usleep(100);
 	}
 }

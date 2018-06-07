@@ -26,4 +26,5 @@ inherit dey-image
 # Do not install udev-cache
 BAD_RECOMMENDATIONS += "udev-cache"
 
-IMAGE_INSTALL += "prs-sensor opcn2-sensor adc-sensor data-handler librnox install-rnox-scr"
+IMAGE_INSTALL += "bme-sensor prs-sensor opcn2-sensor adc-sensor data-handler librnox install-rnox-scr"
+IMAGE_INSTALL += "openvpn tunctl tzdata"

@@ -23,9 +23,17 @@ SRC_URI = "\
 	file://post.h \
 	file://db.h \
 	file://db.c \
+	file://data-handler.sh \
 "
 
-FILES_${PN} = "${bindir}/*"
+inherit update-rc.d
+
+INITSCRIPT_NAME = "data-handler.sh"
+INITSCRIPT_PARAMS = "start 52 5 3 2 . stop 80 0 1 6 ."
+
+FILES_${PN} = "${bindir}/* \
+			   ${sysconfdir} \
+"
 
 do_compile() {
 	${CC} -c main.c post.c db.c
@@ -35,4 +43,9 @@ do_compile() {
 do_install() {
 	 install -d ${D}${bindir}
 	 install -m 0755 ${PN} ${D}${bindir}
+
+ 	 install -d ${D}${sysconfdir} \
+	 			${D}${sysconfdir}/init.d
+
+	 install -m 0755 ${WORKDIR}/data-handler.sh ${D}${sysconfdir}/init.d
 }

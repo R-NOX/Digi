@@ -11,6 +11,7 @@
 int asprintf(char **strp, const char *fmt, ...);
 
 // url to server
+// #define POST_URL "http://rtb.adx1.com/services/druid/ingestion/realtime?datasource=rnox_test_3"
 #define POST_URL "http://rtb.adx1.com/services/druid/ingestion/realtime?datasource=rnox_test_2"
 
 static CURL *post_curl = NULL;                          // curl handle
