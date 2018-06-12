@@ -205,12 +205,23 @@ int main(int argc, char *argv[])
 		log_print(LOG_MSG_INFO, "Failed to initialize OPC-N2 sensor. Exited.\n");
 		return EXIT_FAILURE;
 	}
+	
+	for (int counter = 0; counter < 2; counter++) {
+		/* reset sensor */
+		sensor_off();
+		sleep(3);
+		sensor_on();
+		sleep(3);
 
-	/* reset sensor */
-	sensor_off();
-	sleep(1);
-	sensor_on();
-	sleep(1);
+		// if (sensor_ping()) {
+		// 	log_print(LOG_MSG_INFO, "Connecting successfully\n");
+		// 	break;
+		// }
+
+		// log_print(LOG_MSG_INFO, "No ping\n");
+
+		// sleep(2); 
+	}
 
 //	log_print(LOG_MSG_INFO, print_information_string());
 

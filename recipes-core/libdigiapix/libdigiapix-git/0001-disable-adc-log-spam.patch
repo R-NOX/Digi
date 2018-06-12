@@ -1,0 +1,56 @@
+From 2588e98d16afa1312f4dff9e96552df884ac40df Mon Sep 17 00:00:00 2001
+From: Maksim Prakapovich <maxim.prokopovich@promwad.com>
+Date: Fri, 8 Jun 2018 14:36:05 +0300
+Subject: [PATCH] disable adc log spam
+
+---
+ src/adc.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/src/adc.c b/src/adc.c
+index 89e0fc6..7a05b52 100644
+--- a/src/adc.c
++++ b/src/adc.c
+@@ -21,6 +21,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
++#include <stdbool.h>
+ 
+ #include "_common.h"
+ #include "adc.h"
+@@ -30,6 +31,8 @@
+ 
+ #define BUFF_SIZE		256
+ 
++static bool first_time_log = true;
++
+ static float get_scale(adc_driver_t driver_type, unsigned int adc_chip);
+ 
+ adc_t *ldx_adc_request(unsigned int adc_chip, unsigned int adc_channel)
+@@ -197,7 +200,9 @@ int ldx_adc_get_sample(adc_t *adc)
+ 
+ 	_adc = (adc_internal_t *) adc->_data;
+ 
+-	log_info("%s: Reading ADC value.", __func__);
++	if (first_time_log) {
++		log_info("%s: Reading ADC value.", __func__);
++	}
+ 
+ 	/* We need to restart the pointer in each read */
+ 	lseek(_adc->input_fd, 0, SEEK_SET);
+@@ -218,7 +223,10 @@ int ldx_adc_get_sample(adc_t *adc)
+ 		return -1;
+ 	}
+ 
+-	log_debug("%s: Value read in ADC chip: %d ", __func__, int_value);
++	if (first_time_log) {
++		log_debug("%s: Value read in ADC chip: %d ", __func__, int_value);
++		first_time_log = false;
++	}
+ 
+ 	return int_value;
+ }
+-- 
+2.7.4
+

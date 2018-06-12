@@ -136,6 +136,11 @@ static int adc_sampling_cb(int sample, void *arg)
 {
 	int consumption;
 
+	if (sample < 0) {
+		log_print(LOG_MSG_WARNING, "Wrong sample value");
+		return EXIT_FAILURE;
+	}
+
 	consumption = (2 * pow(10, -7) * pow(sample, 3)) - (0.0007 * pow(sample, 2)) + (1.0915 * sample) - 453.09;
 
 	/* old */
@@ -179,14 +184,14 @@ int main(int argc, char *argv[])
 	/* Create a new SID for the child process */
 	sid = setsid();
 	if (sid < 0) {
-		/* Log the failure */
+		/* Log the failure */ 
 		log_print(LOG_MSG_INFO, "Failed to create SID");
 		exit(EXIT_FAILURE);
 	}
 
 	/* Change the current working directory */
 	if ((chdir("/")) < 0) {
-			/* Log the failure */
+		/* Log the failure */
 		log_print(LOG_MSG_INFO, "Failed to change working directory");
 		exit(EXIT_FAILURE);
 	}
